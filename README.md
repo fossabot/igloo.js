@@ -7,3 +7,8 @@
 igloo.js is the official Igloo JavaScript client. 
 
 ## Getting started
+
+
+## License
+
+See the [license](https://github.com/IglooCloud/igloo.js/blob/master/LICENSE.md) file for license rights and limitations.

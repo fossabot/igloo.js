@@ -1,9 +1,6 @@
 const minimalGraphql = require("minimal-graphql")
 const gql = require("graphql-tag")
-
-function isNumeric(n) {
-    return typeof n !== "symbol" && !isNaN(parseFloat(n)) && isFinite(n)
-}
+const { itemFetcherToArrayGetter } = require("./utilities")
 
 function Igloo(bearer) {
     const client = minimalGraphql({
@@ -60,38 +57,7 @@ class User {
             .then(res => res.data.user.name)
     }
     get environments() {
-        const client = this.client
-
-        const handler = {
-            get: function(obj, prop) {
-                if (isNumeric(prop)) {
-                    return getEnvironment(prop, client)
-                } else if (prop === Symbol.asyncIterator) {
-                    return function() {
-                        let index = 0
-                        return {
-                            next: () =>
-                                getEnvironment(index, client).then(
-                                    environment => {
-                                        index++
-                                        return environment === undefined
-                                            ? { done: true }
-                                            : {
-                                                  value: environment,
-                                                  done: false,
-                                              }
-                                    }
-                                ),
-                        }
-                    }
-                } else {
-                    return obj[prop]
-                }
-            },
-        }
-
-        var lazyLoader = new Proxy({}, handler)
-        return lazyLoader
+        return itemFetcherToArrayGetter(getEnvironment, this.client)
     }
 }
 
@@ -101,7 +67,7 @@ class Environment {
         this.id = id
     }
 
-    static fields() {
+    static scalarFields() {
         return ["id", "name"]
     }
 
@@ -119,6 +85,10 @@ class Environment {
             })
             .then(res => res.data.environment.name)
     }
+
+    get devices() {
+        return itemFetcherToArrayGetter(getDevice(this.id), this.client)
+    }
 }
 
 const getEnvironment = (index, client) => {
@@ -127,6 +97,7 @@ const getEnvironment = (index, client) => {
             query: gql`
                     {
                         user {
+                            id
                             environments(offset:${index},limit:1){
                                 id
                             }
@@ -140,13 +111,97 @@ const getEnvironment = (index, client) => {
                 : new Environment(client, res.data.user.environments[0].id)
         )
 
-    Environment.fields().forEach(field => {
-        promise[field] = promise.then(environment =>
-            environment ? environment[field] : undefined
-        )
+    const handler = {
+        get: function(obj, prop) {
+            if (prop === "devices") {
+                return itemFetcherToArrayGetter(
+                    getDevice(
+                        promise.then(environment =>
+                            environment ? environment.id : undefined
+                        )
+                    ),
+                    client
+                )
+            } else if (Environment.scalarFields().indexOf(prop) !== -1) {
+                return promise.then(environment =>
+                    environment ? environment[prop] : undefined
+                )
+            } else {
+                var value = obj[prop]
+                return typeof value == "function" ? value.bind(obj) : value
+            }
+        },
+    }
+
+    return new Proxy(promise, handler)
+}
+
+class Device {
+    constructor(client, id) {
+        this.client = client
+        this.id = id
+    }
+
+    static scalarFields() {
+        return ["id", "name"]
+    }
+
+    get name() {
+        return this.client
+            .query({
+                query: gql`
+                    {
+                        device(id:"${this.id}") {
+                            id
+                            name
+                        }
+                    }
+                `,
+            })
+            .then(res => res.data.device.name)
+    }
+}
+
+const getDevice = environmentId => (index, client) => {
+    let promise = new Promise(async (resolve, reject) => {
+        let envId = await environmentId
+
+        client
+            .query({
+                query: gql`
+                    {
+                        environment(id:"${envId}"){
+                            id
+                            devices(offset:${index},limit:1){
+                                id
+                            }
+                        }
+                    }
+                `,
+            })
+            .then(res =>
+                resolve(
+                    res.data.environment.devices.length === 0
+                        ? undefined
+                        : new Device(client, res.data.environment.devices[0].id)
+                )
+            )
     })
 
-    return promise
+    const handler = {
+        get: function(obj, prop) {
+            if (Device.scalarFields().indexOf(prop) !== -1) {
+                return promise.then(device =>
+                    device ? device[prop] : undefined
+                )
+            } else {
+                var value = obj[prop]
+                return typeof value == "function" ? value.bind(obj) : value
+            }
+        },
+    }
+
+    return new Proxy(promise, handler)
 }
 
 class Mutation {}

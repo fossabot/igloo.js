@@ -4,7 +4,7 @@
 
 <h1 align="center">igloo.js</h1>
 
-igloo.js is the official Igloo JavaScript client. 
+igloo.js is the official Igloo JavaScript library. 
 
 ## Getting started
 

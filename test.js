@@ -8,6 +8,7 @@ async function main() {
 
     const name = user.environments[0].name
     const picture = user.environments[0].picture
+    console.log(await user.name)
     console.log(await name, await picture)
     // console.log(await user.name)
     // for await (let environment of user.environments) {

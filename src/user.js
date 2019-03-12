@@ -17,7 +17,7 @@ function batchPropGetter(user) {
             
         `,
         })
-        const fetchedValues = keys.map(key => response.data.user[key] || null)
+        const fetchedValues = keys.map(key => response.data.user[key])
 
         return fetchedValues
     }

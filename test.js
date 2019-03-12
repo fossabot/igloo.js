@@ -6,10 +6,6 @@ async function main() {
     const igloo = Igloo(bearer)
     const user = igloo.query.user
 
-    const name = user.environments[0].name
-    const picture = user.environments[0].picture
-    console.log(await user.name)
-    console.log(await name, await picture)
     // console.log(await user.name)
     // for await (let environment of user.environments) {
     //     console.log("- " + (await environment.name))
@@ -18,7 +14,8 @@ async function main() {
     //     }
     // }
 
-    // console.log(await user.environments[0].devices[0].name)
+    console.log(await user.environments[1].devices[0].name)
+    console.log(await user.environments[1].devices[0].deviceType)
 }
 
 main()

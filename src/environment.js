@@ -15,9 +15,7 @@ function batchPropGetter(environment) {
             }
         `,
         })
-        const fetchedValues = keys.map(
-            key => response.data.environment[key] || null
-        )
+        const fetchedValues = keys.map(key => response.data.environment[key])
 
         return fetchedValues
     }

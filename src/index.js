@@ -7,6 +7,7 @@ function Igloo(bearer) {
         headers: {
             Authorization: "Bearer " + bearer,
         },
+        // fetchPolicy: "no-cache",
     })
 
     return {

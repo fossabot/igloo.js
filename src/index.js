@@ -1,5 +1,7 @@
 const minimalGraphql = require("minimal-graphql")
-const User = require("./user")
+const { User } = require("./user")
+const { Environment } = require("./environment")
+const { Device } = require("./device")
 
 function Igloo(bearer) {
     const client = minimalGraphql({
@@ -22,6 +24,14 @@ class Query {
     }
     get user() {
         return new User(this.client)
+    }
+
+    environment(id) {
+        return new Environment(this.client, id)
+    }
+
+    device(id) {
+        return new Device(this.client, id)
     }
 }
 

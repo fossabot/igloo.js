@@ -1,8 +1,8 @@
 {
-    "name": "igloo",
-    "version": "1.0.0",
+    "name": "igloo.js",
+    "version": "1.0.1",
     "description": "Igloo client library",
-    "main": "index.js",
+    "main": "src/index.js",
     "scripts": {
         "test": "node test.js"
     },

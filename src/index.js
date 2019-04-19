@@ -2,19 +2,64 @@ const minimalGraphql = require("minimal-graphql")
 const { User } = require("./user")
 const { Environment } = require("./environment")
 const { Device } = require("./device")
+const Mutation = require("./mutation")
 
-function Igloo(bearer) {
-    const client = minimalGraphql({
-        uri: "https://iglooql.herokuapp.com/graphql",
-        headers: {
-            Authorization: "Bearer " + bearer,
-        },
-        // fetchPolicy: "no-cache",
-    })
+class GraphQLError extends Error {
+    constructor(message, e) {
+        super(message)
+        this.fullError = e
+    }
+}
 
-    return {
-        query: new Query(client),
-        mutation: new Mutation(),
+class Igloo {
+    constructor(bearer) {
+        this.client = minimalGraphql({
+            uri: "https://iglooql.herokuapp.com/graphql",
+            headers: {
+                Authorization: "Bearer " + bearer,
+            },
+            fetchPolicy: "no-cache",
+        })
+
+        const _query = this.client.query
+        this.client.query = (...args) =>
+            _query(...args).catch(e => {
+                if (
+                    e.networkError &&
+                    e.networkError.result &&
+                    e.networkError.result.errors &&
+                    e.networkError.result.errors.length !== 0
+                ) {
+                    throw new Error(e.networkError.result.errors[0].message, e)
+                } else {
+                    throw e
+                }
+            })
+
+        const _mutate = this.client.mutate
+        this.client.mutate = (...args) =>
+            _mutate(...args).catch(e => {
+                if (
+                    e.networkError &&
+                    e.networkError.result &&
+                    e.networkError.result.errors &&
+                    e.networkError.result.errors.length !== 0
+                ) {
+                    throw new GraphQLError(
+                        e.networkError.result.errors[0].message,
+                        e
+                    )
+                } else {
+                    throw e
+                }
+            })
+    }
+
+    get query() {
+        return new Query(this.client)
+    }
+    get mutation() {
+        return new Mutation(this.client)
     }
 }
 
@@ -34,7 +79,5 @@ class Query {
         return new Device(this.client, id)
     }
 }
-
-class Mutation {}
 
 module.exports = Igloo

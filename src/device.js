@@ -1,4 +1,4 @@
-const { itemFetcherToArrayGetter } = require("./utilities")
+const { itemFetcherToArrayGetter, genericGetter } = require("./utilities")
 const gql = require("graphql-tag")
 const DataLoader = require("dataloader")
 
@@ -28,7 +28,7 @@ class Device {
         this.propLoader = new DataLoader(batchPropGetter(this))
     }
 
-    static scalarFields() {
+    static fields() {
         return [
             "name",
             "index",
@@ -83,46 +83,21 @@ class Device {
     }
 }
 
-const getDevice = environmentId => (index, client) => {
-    let promise = new Promise(async (resolve, reject) => {
-        let envId = await environmentId
-
-        client
-            .query({
-                query: gql`
-                    {
-                        environment(id:"${envId}"){
-                            id
-                            devices(offset:${index},limit:1){
-                                id
-                            }
-                        }
-                    }
-                `,
-            })
-            .then(res =>
-                resolve(
-                    res.data.environment.devices.length === 0
-                        ? undefined
-                        : new Device(client, res.data.environment.devices[0].id)
-                )
-            )
-    })
-
-    const handler = {
-        get: function(obj, prop) {
-            if (Device.scalarFields().indexOf(prop) !== -1) {
-                return promise.then(device =>
-                    device ? device[prop] : undefined
-                )
-            } else {
-                var value = obj[prop]
-                return typeof value == "function" ? value.bind(obj) : value
-            }
-        },
+const getDevice = environmentId =>
+    genericGetter(
+        async index =>
+            gql(`
+{
+    environment(id:"${await environmentId}"){
+        id
+        devices(offset:${index},limit:1){
+            id
+        }
     }
-
-    return new Proxy(promise, handler)
 }
+`),
+        "environment.devices",
+        Device
+    )
 
 module.exports = { Device, getDevice }

@@ -1,10 +1,10 @@
 const Igloo = require("./src/index")
 const bearer =
-    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJleHAiOjE1NTMwMzI3MjMsInVzZXJJZCI6ImYxMDJkZWFjLTBkZDItNDBlZC05Mzg1LWUzMjdiMzQzZjZmZSIsImFjY2Vzc0xldmVsIjoiT1dORVIiLCJ0b2tlblR5cGUiOiJURU1QT1JBUlkifQ.PhdPFHqrL357VuQkIidbJ_DgIBprtRVfGGVv-I_SlewB8ciyns6-qmUrMQ52FdhKHFJNsfsp71p6Pa5jahB33A"
+    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJ1c2VySWQiOiJmODFhODQ3Zi1mZDAyLTQzMDgtOWY3Zi02MTNkZjQ2OTUyNzMiLCJ0b2tlbklkIjoiNTVjYTQwMTEtNzdiNC00NDUzLWI2NjktYTk4MTkzMzVkYmM1IiwiYWNjZXNzTGV2ZWwiOiJERVZJQ0UiLCJ0b2tlblR5cGUiOiJQRVJNQU5FTlQifQ.1D6vR1zzEXmwxMdmukR-5cQ7qMhA2MTnO2f-M0nv8QgGaT8H5jUxzIDk_hjX3Faem5_Uy2Q-7zwRnXkY8306Hw"
 
 async function main() {
     const igloo = new Igloo(bearer)
-    console.log(await igloo.mutation.user({ name: "Ehi" }))
+    await igloo.mutation.user({ name: "Ohi" })
     const user = igloo.query.user
 
     console.log(await user.name)

@@ -14,7 +14,7 @@ class GraphQLError extends Error {
 class Igloo {
     constructor(bearer) {
         this.client = minimalGraphql({
-            uri: "https://iglooql.herokuapp.com/graphql",
+            uri: "https://bering.igloo.ooo/graphql",
             headers: {
                 Authorization: "Bearer " + bearer,
             },

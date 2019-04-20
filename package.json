@@ -1,6 +1,6 @@
 {
     "name": "igloo.js",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Igloo client library",
     "main": "src/index.js",
     "scripts": {
@@ -10,6 +10,7 @@
     "license": "ISC",
     "dependencies": {
         "dataloader": "^1.4.0",
+        "dot-prop": "^5.0.0",
         "minimal-graphql": "^1.0.3"
     }
 }

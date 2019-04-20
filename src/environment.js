@@ -1,4 +1,4 @@
-const { itemFetcherToArrayGetter } = require("./utilities")
+const { itemFetcherToArrayGetter, genericGetter } = require("./utilities")
 const { getDevice } = require("./device")
 const gql = require("graphql-tag")
 const DataLoader = require("dataloader")
@@ -39,6 +39,21 @@ class Environment {
             "notificationCount",
             "index",
             "muted",
+        ]
+    }
+
+    static fields() {
+        return [
+            "myRole",
+            "pendingEnvironmentShareCount",
+            "pendingOwnerChangeCount",
+            "name",
+            "picture",
+            "deviceCount",
+            "notificationCount",
+            "index",
+            "muted",
+            "devices",
         ]
     }
 
@@ -83,49 +98,19 @@ class Environment {
     }
 }
 
-const getEnvironment = (index, client) => {
-    let promise = client
-        .query({
-            query: gql`
-                    {
-                        user {
-                            id
-                            environments(offset:${index},limit:1){
-                                id
-                            }
-                        }
-                    }
-                `,
-        })
-        .then(res =>
-            res.data.user.environments.length === 0
-                ? undefined
-                : new Environment(client, res.data.user.environments[0].id)
-        )
-
-    const handler = {
-        get: function(obj, prop) {
-            if (prop === "devices") {
-                return itemFetcherToArrayGetter(
-                    getDevice(
-                        promise.then(environment =>
-                            environment ? environment.id : undefined
-                        )
-                    ),
-                    client
-                )
-            } else if (Environment.scalarFields().indexOf(prop) !== -1) {
-                return promise.then(environment =>
-                    environment ? environment[prop] : undefined
-                )
-            } else {
-                var value = obj[prop]
-                return typeof value == "function" ? value.bind(obj) : value
-            }
-        },
+const getEnvironment = genericGetter(
+    index => gql`
+{
+    user {
+        id
+        environments(offset:${index},limit:1){
+            id
+        }
     }
-
-    return new Proxy(promise, handler)
 }
+`,
+    "user.environments",
+    Environment
+)
 
 module.exports = { Environment, getEnvironment }

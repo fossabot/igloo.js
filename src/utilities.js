@@ -1,3 +1,5 @@
+const dotProp = require("dot-prop")
+
 function isNumeric(n) {
     return typeof n !== "symbol" && !isNaN(parseFloat(n)) && isFinite(n)
 }
@@ -36,7 +38,38 @@ const itemFetcherToArrayGetter = (fetcher, client) => {
     return lazyLoader
 }
 
+const genericGetter = (indexToQuery, path, Wrapper) => (index, client) => {
+    let promise = new Promise(async (resolve, reject) => {
+        const res = await client.query({
+            query: await indexToQuery(index),
+        })
+
+        const parsedRes = dotProp.get(res.data, path)
+        resolve(
+            parsedRes.length === 0
+                ? undefined
+                : new Wrapper(client, parsedRes[0].id)
+        )
+    })
+
+    const handler = {
+        get: function(obj, prop) {
+            if (Wrapper.fields().indexOf(prop) !== -1) {
+                return promise.then(environment =>
+                    environment ? environment[prop] : undefined
+                )
+            } else {
+                var value = obj[prop]
+                return typeof value == "function" ? value.bind(obj) : value
+            }
+        },
+    }
+
+    return new Proxy(promise, handler)
+}
+
 module.exports = {
     fetcherToAsyncIterator,
-    itemFetcherToArrayGetter: itemFetcherToArrayGetter,
+    itemFetcherToArrayGetter,
+    genericGetter,
 }
